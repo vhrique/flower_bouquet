@@ -1,0 +1,5 @@
+# Source photos and everything derived from them stay local.
+images/
+work/
+out/
+__pycache__/

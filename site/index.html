@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bouquet</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #f4f1ec; font-family: Georgia, "Times New Roman", serif; color: #3a2f2a; overflow: hidden; }
+  #view { position: fixed; inset: 0; }
+  header { position: fixed; top: 0; left: 0; right: 0; padding: 20px 24px; pointer-events: none; z-index: 2; }
+  h1 { margin: 0; font-weight: normal; font-size: 1.6rem; letter-spacing: .02em; }
+  p { margin: 4px 0 0; font-size: .9rem; opacity: .65; }
+  footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 24px; font-size: .8rem; opacity: .55; pointer-events: none; z-index: 2; }
+</style>
+</head>
+<body>
+<div id="view"></div>
+<header>
+  <h1>Bouquet</h1>
+  <p>Reconstructed in 3D from 87 photographs</p>
+</header>
+<footer>Drag to rotate · scroll or pinch to zoom</footer>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "@mkkellogg/gaussian-splats-3d": "https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.7/build/gaussian-splats-3d.module.js"
+} }
+</script>
+<script type="module">
+import * as THREE from "three";
+import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
+
+const el = document.getElementById("view");
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.setClearColor(0xf4f1ec, 1);
+el.appendChild(renderer.domElement);
+
+// Splat is Z-up, vase base at the origin, bouquet height = 1.
+const viewer = new GaussianSplats3D.Viewer({
+  renderer,
+  rootElement: el,
+  cameraUp: [0, 0, 1],
+  initialCameraPosition: [0, -1.9, 0.7],
+  initialCameraLookAt: [0, 0, 0.47],
+  sharedMemoryForWorkers: false, // GitHub Pages can't send the COOP/COEP headers SharedArrayBuffer needs
+  dynamicScene: false,
+});
+viewer.addSplatScene("bouquet.splat", { showLoadingUI: true, progressiveLoad: true })
+  .then(() => {
+    viewer.start();
+    const c = viewer.controls;
+    if (c) {
+      c.autoRotate = true;
+      c.autoRotateSpeed = 1.2;
+      c.minDistance = 0.8;
+      c.maxDistance = 6;
+      c.addEventListener("start", () => (c.autoRotate = false));
+    }
+  });
+
+addEventListener("resize", () => renderer.setSize(innerWidth, innerHeight));
+</script>
+</body>
+</html>
