@@ -48,7 +48,7 @@ const viewer = new GaussianSplats3D.Viewer({
   sharedMemoryForWorkers: false, // GitHub Pages can't send the COOP/COEP headers SharedArrayBuffer needs
   dynamicScene: false,
 });
-viewer.addSplatScene("bouquet.splat", { showLoadingUI: true, progressiveLoad: true })
+viewer.addSplatScene("bouquet.splat", { showLoadingUI: true, progressiveLoad: false })
   .then(() => {
     viewer.start();
     const c = viewer.controls;
