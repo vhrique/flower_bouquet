@@ -18,7 +18,7 @@ rendered in the browser as a Gaussian Splat.
    [gsplat](https://github.com/nerfstudio-project/gsplat) on the COLMAP poses, in the aligned frame.
 6. **Crop and export** (`crop_splat.py`): keep the bouquet and a bit of tablecloth, remove
    background haze, and write a compact `.splat` for the web.
-7. **Viewer** (`site/`): [GaussianSplats3D](https://github.com/mkkellogg/GaussianSplats3D) on three.js.
+7. **Viewer** (`site/`): [Spark](https://sparkjs.dev) on three.js.
 
 ## Reproducing
 
