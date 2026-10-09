@@ -10,6 +10,7 @@
   header { position: fixed; top: 0; left: 0; right: 0; padding: 20px 24px; pointer-events: none; z-index: 2; }
   h1 { margin: 0; font-weight: normal; font-size: 1.6rem; letter-spacing: .02em; }
   p { margin: 4px 0 0; font-size: .9rem; opacity: .65; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; font-size: 1rem; opacity: .7; }
   footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 24px; font-size: .8rem; opacity: .55; pointer-events: none; z-index: 2; }
 </style>
 </head>
@@ -19,49 +20,56 @@
   <h1>Bouquet</h1>
   <p>Reconstructed in 3D from 87 photographs</p>
 </header>
+<div id="loading">Loading…</div>
 <footer>Drag to rotate · scroll or pinch to zoom</footer>
 
 <script type="importmap">
 { "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "@mkkellogg/gaussian-splats-3d": "https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.7/build/gaussian-splats-3d.module.js"
+  "three": "https://cdn.jsdelivr.net/npm/three@0.178.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.178.0/examples/jsm/",
+  "@sparkjsdev/spark": "https://cdn.jsdelivr.net/npm/@sparkjsdev/spark@0.1.10/dist/spark.module.js"
 } }
 </script>
 <script type="module">
 import * as THREE from "three";
-import * as GaussianSplats3D from "@mkkellogg/gaussian-splats-3d";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { SplatMesh, SplatFileType } from "@sparkjsdev/spark";
 
 const el = document.getElementById("view");
 const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
-renderer.setClearColor(0xf4f1ec, 1);
 el.appendChild(renderer.domElement);
 
-// Splat is Z-up, vase base at the origin, bouquet height = 1.
-const viewer = new GaussianSplats3D.Viewer({
-  renderer,
-  rootElement: el,
-  cameraUp: [0, 0, 1],
-  initialCameraPosition: [0, -1.9, 0.7],
-  initialCameraLookAt: [0, 0, 0.47],
-  sharedMemoryForWorkers: false, // GitHub Pages can't send the COOP/COEP headers SharedArrayBuffer needs
-  dynamicScene: false,
-});
-viewer.addSplatScene("bouquet.splat", { showLoadingUI: true, progressiveLoad: false })
-  .then(() => {
-    viewer.start();
-    const c = viewer.controls;
-    if (c) {
-      c.autoRotate = true;
-      c.autoRotateSpeed = 1.2;
-      c.minDistance = 0.8;
-      c.maxDistance = 6;
-      c.addEventListener("start", () => (c.autoRotate = false));
-    }
-  });
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f1ec);
 
-addEventListener("resize", () => renderer.setSize(innerWidth, innerHeight));
+// Splat is Z-up, vase base at the origin, bouquet height = 1.
+const camera = new THREE.PerspectiveCamera(40, innerWidth / innerHeight, 0.01, 100);
+camera.up.set(0, 0, 1);
+camera.position.set(0, -2.3, 0.75);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0.47);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 1.2;
+controls.minDistance = 0.8;
+controls.maxDistance = 6;
+controls.addEventListener("start", () => (controls.autoRotate = false));
+
+const bouquet = new SplatMesh({ url: "bouquet.splat", fileType: SplatFileType.SPLAT });
+scene.add(bouquet);
+bouquet.initialized
+  .then(() => document.getElementById("loading").remove())
+  .catch(() => (document.getElementById("loading").textContent = "Could not load bouquet.splat"));
+
+addEventListener("resize", () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+renderer.setAnimationLoop(() => { controls.update(); renderer.render(scene, camera); });
 </script>
 </body>
 </html>
